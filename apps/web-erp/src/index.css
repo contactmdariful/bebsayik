@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Surface & Neutral Foundations */
+  --bg-app: #F8FAFC;              /* slate-50: Main application canvas */
+  --bg-surface: #FFFFFF;          /* Pure White: Cards, tables, drawers */
+  --bg-surface-subtle: #F1F5F9;   /* slate-100: Table headers, input backgrounds */
+  --border-subtle: #E2E8F0;       /* slate-200: Default card and table dividers */
+  --border-strong: #CBD5E1;       /* slate-300: Active inputs, modal boundaries */
+  
+  /* Text Typography Colors */
+  --text-primary: #0F172A;        /* slate-900: High-contrast primary headings & body */
+  --text-secondary: #475569;      /* slate-600: Field labels, helper descriptions */
+  --text-muted: #94A3B8;          /* slate-400: Placeholders, disabled text */
+  --text-inverse: #FFFFFF;        /* White on dark backgrounds */
+  
+  /* Brand Primary & Financial Accent */
+  --brand-primary: #0D9488;        /* teal-600: Trustworthy corporate brand */
+  --brand-primary-hover: #0F766E;  /* teal-700: Interactive hover state */
+  --brand-accent: #0284C7;         /* sky-600: Active links, information badges */
+  
+  /* Semantic Status Palette */
+  --success-bg: #ECFDF5;          /* emerald-50: Paid, in-stock, verified */
+  --success-border: #A7F3D0;      /* emerald-200 */
+  --success-text: #065F46;        /* emerald-800 */
+  
+  --warning-bg: #FFFBEB;          /* amber-50: Due pending, aging stock (>60d), low stock */
+  --warning-border: #FDE68A;      /* amber-200 */
+  --warning-text: #92400E;        /* amber-800 */
+  
+  --danger-bg: #FEF2F2;           /* rose-50: Defaulter, returned, cancelled, scrap */
+  --danger-border: #FECACA;       /* rose-200 */
+  --danger-text: #991B1B;         /* rose-800 */
+  
+  --info-bg: #F0F9FF;             /* sky-50: Active shift, in-transit STN, RMA brand care */
+  --info-border: #BAE6FD;         /* sky-200 */
+  --info-text: #075985;           /* sky-800 */
+
+  --due-bg: #F5F3FF;              /* purple-50: Bakir Khata, installments */
+  --due-border: #DDD6FE;          /* purple-200 */
+  --due-text: #6D28D9;            /* purple-700 */
+
+  --touch-target-min: 44px;
+}
+
+/* Invariant: Tabular numbers for all currency, IMEIs, and financial tables */
+.tnum, .font-tabular {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Minimum 44x44px touch target utility */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Safe area insets for mobile devices */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}

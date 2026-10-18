@@ -1,0 +1,15 @@
+{
+  "name": "@bebsayik/ui-tokens",
+  "version": "2.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo \"@bebsayik/ui-tokens lint clean\""
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

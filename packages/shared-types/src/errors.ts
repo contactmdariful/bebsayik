@@ -1,0 +1,24 @@
+/**
+ * Centralized Domain Error Code Catalog (16 Standardized Codes)
+ * Sourced from api-spec.md Section 2.6 & AGENT.md Section 7.2
+ */
+export const DOMAIN_ERROR_CODES = [
+  'MSP_FLOOR_BREACH',
+  'IMEI_ALREADY_SOLD',
+  'INVALID_IMEI_LUHN',
+  'CREDIT_LIMIT_EXCEEDED',
+  'STAFF_TERMINATED',
+  'SHIFT_NOT_OPEN',
+  'RECOUNT_LIMIT_EXCEEDED',
+  'PERSONAL_LEDGER_CONTAMINATED',
+  'IDEMPOTENCY_CONFLICT',
+  'SUPPLIER_DUES_EXCEEDED',
+  'INSUFFICIENT_STOCK',
+  'PATTERN_LOCK_INVALID',
+  'INVALID_MANAGER_PIN',
+  'TENANT_ACCESS_DENIED',
+  'RATE_LIMIT_EXCEEDED',
+  'OTP_EXPIRED'
+] as const;
+
+export type DomainErrorCode = (typeof DOMAIN_ERROR_CODES)[number] | 'INSUFFICIENT_PERMISSIONS';

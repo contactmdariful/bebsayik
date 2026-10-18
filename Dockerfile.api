@@ -1,0 +1,75 @@
+# ==============================================================================
+# Bebsayik.com — Production Multi-Stage Dockerfile for Express API Gateway
+# Target: Node.js 22 Alpine | Non-Root User | Sub-150ms POS Performance
+# ==============================================================================
+
+# Stage 1: Dependencies and Build
+FROM node:22-alpine AS builder
+
+WORKDIR /app
+
+# Install build tools if native compilation is needed
+RUN apk add --no-cache python3 make g++
+
+# Copy root manifests and workspace package manifests for optimized layer caching
+COPY package.json package-lock.json tsconfig.base.json tsconfig.json ./
+COPY packages/shared-types/package.json ./packages/shared-types/
+COPY packages/ui-tokens/package.json ./packages/ui-tokens/
+COPY packages/api/package.json ./packages/api/
+COPY apps/admin/package.json ./apps/admin/
+COPY apps/marketing/package.json ./apps/marketing/
+COPY apps/web-erp/package.json ./apps/web-erp/
+
+# Install all monorepo dependencies
+RUN npm ci
+
+# Copy full source trees for backend packages
+COPY packages/shared-types ./packages/shared-types
+COPY packages/ui-tokens ./packages/ui-tokens
+COPY packages/api ./packages/api
+
+# Compile TypeScript packages in dependency order
+RUN npm run build --workspace=@bebsayik/shared-types
+RUN npm run build --workspace=@bebsayik/api
+
+# Prune devDependencies for production image
+RUN npm prune --omit=dev
+
+# ==============================================================================
+# Stage 2: Hardened Minimal Production Runner
+# ==============================================================================
+FROM node:22-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=5000
+
+# Install dumb-init for clean PID 1 signal forwarding and wget for healthchecks
+RUN apk add --no-cache dumb-init wget
+
+# Create non-root system group and user
+RUN addgroup -g 1001 -S bebsayik && \
+    adduser -S bebsayik -u 1001 -G bebsayik
+
+# Copy production root manifest and pruned node_modules
+COPY --chown=bebsayik:bebsayik --from=builder /app/package.json ./
+COPY --chown=bebsayik:bebsayik --from=builder /app/node_modules ./node_modules
+
+# Copy compiled workspaces required for API runtime
+COPY --chown=bebsayik:bebsayik --from=builder /app/packages/shared-types/package.json ./packages/shared-types/
+COPY --chown=bebsayik:bebsayik --from=builder /app/packages/shared-types/dist ./packages/shared-types/dist
+COPY --chown=bebsayik:bebsayik --from=builder /app/packages/api/package.json ./packages/api/
+COPY --chown=bebsayik:bebsayik --from=builder /app/packages/api/dist ./packages/api/dist
+
+# Switch to unprivileged non-root user
+USER bebsayik
+
+EXPOSE 5000
+
+# Container healthcheck testing the liveness probe endpoint
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD wget -qO- http://localhost:5000/api/v1/health/liveness || exit 1
+
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "packages/api/dist/index.js"]

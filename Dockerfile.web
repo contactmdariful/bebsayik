@@ -1,0 +1,60 @@
+# ==============================================================================
+# Bebsayik.com — Production Multi-Stage Dockerfile for Nginx Static Frontends
+# Target: Nginx 1.27 Alpine | Hardened Security Headers | Multi-Subdomain Hosting
+# Serves: bebsayik.com (Marketing), app.bebsayik.com (Web ERP/POS), admin.bebsayik.com (Admin)
+# ==============================================================================
+
+# Stage 1: Build all frontend SPAs
+FROM node:22-alpine AS builder
+
+WORKDIR /app
+
+# Install build tools if native compilation is needed (e.g. argon2)
+RUN apk add --no-cache python3 make g++
+
+# Copy root manifests and workspace configs
+COPY package.json package-lock.json tsconfig.base.json tsconfig.json ./
+COPY packages/shared-types/package.json ./packages/shared-types/
+COPY packages/ui-tokens/package.json ./packages/ui-tokens/
+COPY packages/api/package.json ./packages/api/
+COPY apps/admin/package.json ./apps/admin/
+COPY apps/marketing/package.json ./apps/marketing/
+COPY apps/web-erp/package.json ./apps/web-erp/
+
+# Install monorepo dependencies
+RUN npm ci
+
+# Copy all source files
+COPY packages ./packages
+COPY apps ./apps
+
+# Build all monorepo packages and apps
+RUN npm run build --workspaces
+
+# ==============================================================================
+# Stage 2: Hardened Nginx Production Web Server
+# ==============================================================================
+FROM nginx:1.27-alpine AS runner
+
+# Remove default nginx boilerplate configuration
+RUN rm -rf /etc/nginx/conf.d/* /usr/share/nginx/html/*
+
+# Copy compiled SPA dist outputs to designated host directories
+COPY --from=builder /app/apps/marketing/dist /usr/share/nginx/html/marketing
+COPY --from=builder /app/apps/web-erp/dist /usr/share/nginx/html/web-erp
+COPY --from=builder /app/apps/admin/dist /usr/share/nginx/html/admin
+
+# Copy custom hardened Nginx configuration
+COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY docker/nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf
+
+# Verify permissions for nginx worker user
+RUN chown -R nginx:nginx /usr/share/nginx/html /var/cache/nginx /var/log/nginx
+
+EXPOSE 80
+
+# Healthcheck testing the /healthz endpoint
+HEALTHCHECK --interval=15s --timeout=3s --retries=3 \
+  CMD wget -qO- http://127.0.0.1/healthz || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]

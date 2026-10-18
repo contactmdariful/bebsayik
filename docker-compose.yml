@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # MongoDB 7.0+ with Single-Node Replica Set (Mandatory for ACID Transactions)
+  mongo:
+    image: mongo:7.0
+    container_name: bebsayik-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: bebsayik_dev
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    volumes:
+      - mongo_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    healthcheck:
+      test: test $$(mongosh --eval 'rs.status().ok' --quiet) -eq 1 || mongosh --eval 'rs.initiate({_id:"rs0",members:[{_id:0,host:"localhost:27017"}]})'
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  # Redis 7+ for Sliding-Window Rate Limiting, Cart Locks & Token Blacklisting
+  redis:
+    image: redis:7-alpine
+    container_name: bebsayik-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  mongo_data:
+  redis_data:

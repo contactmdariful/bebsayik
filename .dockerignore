@@ -1,0 +1,43 @@
+# Git & Version Control
+.git
+.gitignore
+.github
+
+# Node & Package Managers
+node_modules
+npm-debug.log
+yarn-error.log
+.pnpm-debug.log
+
+# Environment & Secrets (Never bake into images)
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Build Artifacts (Will be compiled inside Docker)
+dist
+build
+.next
+.turbo
+.cache
+
+# Testing & Coverage
+coverage
+.nyc_output
+playwright-report
+test-results
+
+# IDEs & System Files
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Documentation & Scratch Files
+docs/
+*.md
+!AGENT.md
